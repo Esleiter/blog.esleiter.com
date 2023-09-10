@@ -1,0 +1,514 @@
+---
+title: "Acortador de URLs"
+summary: "Acorta tus URLs con Node.js, Express, MongoDB y React."
+date: 2023-03-28
+dateText: "28 de Marzo del 2023"
+readingTime: "Tiempo de lectura: 2 min 50 seg."
+---
+
+## Acortador de URLs
+
+Demo: **[c.esleiter.com](https://c.esleiter.com)**  
+Test: **[c.esleiter.com/gugol](https://c.esleiter.com/gugol)** redirige a google...
+
+### Introducción
+¡Hola! Hoy quiero compartir un proyecto que desarrollé como parte de mi aprendizaje en programación. Se trata de un acortador de URLs desarrollado con tecnologías como **Node.js, Express, MongoDB y React.** Más adelante lo veremos a detalle.
+
+Este proyecto me permitió mejorar mis habilidades en el desarrollo web full-stack y aprender nuevas herramientas como el uso de bases de datos no relacionales. Además, si tomas como guía este post, será una forma útil de poner en práctica y adquirir nuevos conocimientos en el desarrollo de aplicaciones web.
+
+### Funcionamiento
+El acortador de URLs funciona de manera sencilla: el usuario ingresa una URL larga y el sistema devuelve una URL corta generada aleatoriamente que redirige al sitio original. El sistema también guarda la URL original y la URL corta en una base de datos, lo que permite una fácil recuperación de las URLS cortas en el futuro.
+
+### Requisitos previos
+Antes de comenzar, asegúrate de tener instalado lo siguiente en tu sistema:
+
+- **MongoDB** - Versión utilizada en el proyecto 5.0.2
+- **Node.js** - Versión utilizada en el proyecto 14.17.4
+
+### Pasos para la instalación
+1. Abre la terminal.
+2. Clona el repositorio de **[GitHub del proyecto "cutURLs"](https://github.com/Esleiter/cutURLs)** usando el siguiente comando:
+```bash
+$ git clone https://github.com/Esleiter/cutURLs
+```
+3. Con la terminal ubicada en el proyecto, Navega a la carpeta **"backend"** e instala las dependencias:
+```bash
+cd backend
+npm install
+```
+4. Inicia el servidor del backend:  
+Esto iniciará el servidor del proyecto backend en el puerto **4000**.
+```bash
+npm start
+```
+
+5. En otra terminal, navega a la carpeta **"frontend"** del proyecto e instala las dependencias:
+```bash
+cd frontend
+npm install
+```
+6. Inicia el servidor del frontend:  
+Esto iniciará el servidor del proyecto frontend en el puerto **3000**.
+```bash
+npm start
+```
+
+7. Abre tu navegador web y accede a la siguiente URL para usar la aplicación:
+**[http://localhost:3000](http://localhost:3000)**
+
+### Estructura
+La estructura del directorio del proyecto es la siguiente:
+
+```
+- backend
+    - app.js
+    - database.js
+    - package-lock.json
+    - package.json
+    - src
+        - cut.js
+        - redirect.js
+        - models
+            urls.js
+
+- frontend
+    - package-lock.json
+    - package.json
+    - public
+        - index.html
+    - src
+        - index.js
+        - css
+            - app.css
+            - index.css
+        - js
+            - app.js
+            - cut.js
+            - redirect.js
+            - social.js
+- README.md
+```
+
+### Backend
+
+```js:-app.js
+import express from "express";
+import "./database.js";
+import { cut } from "./src/cut.js";
+import { redirect } from "./src/redirect.js";
+
+// Crea una nueva instancia de la aplicación Express
+const app = express();
+
+// Define el número de puerto en el que se ejecutará el servidor
+const port = 4000;
+
+// Agrega un middleware que analiza los datos JSON en las solicitudes entrantes
+app.use(express.json());
+
+// Agrega encabezados de CORS para permitir solicitudes desde el frontend de React
+app.use((req, res, next) => {
+    res.setHeader('Access-Control-Allow-Origin', 'http://localhost:3000');
+    res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS, PUT, PATCH, DELETE');
+    res.setHeader('Access-Control-Allow-Headers', 'X-Requested-With,content-type');
+    res.setHeader('Access-Control-Allow-Credentials', true);
+    next();
+});
+
+// Endpoint para crear una URL corta
+app.post("/cut", cut);
+
+// Endpoint para redirigir a una URL original a partir del código corto
+app.get("/:code", redirect);
+
+// Inicia el servidor en el puerto especificado
+app.listen(port, () => {
+    console.log(`Servidor corriendo en el puerto ${port}`);
+});
+```
+```js:-database.js
+import mongoose from 'mongoose';
+
+// Establece una conexión a la base de datos MongoDB especificada en la URL
+mongoose.connect('mongodb://localhost/nombreDeTuBaseDeDatos', {
+    useNewUrlParser: true, // Opciones de configuración de Mongoose
+    useUnifiedTopology: true
+})
+.then(db => console.log('La base de datos está conectada'))
+.catch(err => console.log(err));
+```
+```js:-cut.js
+import urls from './models/urls.js';
+
+export const cut = async (req, res) => {
+  const urlRegex = /(http|https):\/\/(\w+:{0,1}\w*@)?[-a-zA-Z0-9@:%._~#=]{2,256}\.[a-z]{2,6}\b([-a-zA-Z0-9@:%_.~#?&//=]*)/g;
+
+  // Verifica que el cuerpo de la solicitud tenga una URL válida
+  if (req.body.url === undefined || !urlRegex.test(req.body.url)) {
+    return res.status(400).json({msj : "Solicitud incorrecta"});
+  } else {
+    // Verifica si la URL ya ha sido acortada previamente
+    const linkUrl = await urls.findOne({url: req.body.url});
+    if (!linkUrl) {
+      // Genera un código de enlace acortado aleatorio y verifica que no exista
+      const code = "xxxx".replace(/(.|$)/g, () => {
+        return ((Math.random()*36)|0).toString(36);
+      });
+      //const linkCode = await urls.findOne({code: code}); modificar la función para verificar si el código aleatorio ya existe
+      const url = req.body.url;
+      const newUrl = new urls({ url, code, date : new Date });
+      await newUrl.save();
+      // Devuelve el código de enlace acortado generado
+      res.status(200).json({code : code});
+    } else {
+      // Devuelve el código de enlace acortado ya existente
+      res.status(200).json({code : linkUrl.code});
+    };
+  };
+};
+```
+```js:-redirect.js
+import urls from './models/urls.js';
+
+// Función para redirigir a la URL original a partir del código generado.
+export const redirect = async (req, res) => {
+    const codeRegex = /^([a-z0-9]){5}$/;
+    if (!codeRegex.test(req.params.code)) { // Si el código no es válido, devuelve un error 404.
+        return res.status(404).json({msj : "URL no válida"});
+    } else {
+        const linkObj = await urls.findOne({code: req.params.code}); // Busca el objeto de la URL en la base de datos.
+        if (!linkObj) { // Si el objeto no existe, devuelve un error 404.
+            return res.status(404).json({msj : "URL no encontrada"});
+        } else {
+        res.status(200).json({url : linkObj.url}); // Devuelve la URL original.
+        //res.redirect(linkObj.url); // Redirige automáticamente a la URL original.
+        };
+    };
+};
+```
+```js:-models/urls.js
+// Importamos Mongoose
+import mongoose from "mongoose";
+
+// Extraemos el Schema de Mongoose
+const { Schema } = mongoose;
+
+// Definimos el esquema para la colección 'urls'
+const urlsSchema = new Schema({
+  url: { type: String, required: true },
+  code: { type: String, required: true },
+  date : {type : Date, default : Date.now}
+});
+
+// Creamos el modelo 'urls' a partir del esquema
+const urls = mongoose.model('urls', urlsSchema);
+
+// Exportamos el modelo 'urls'
+export default urls;
+```
+### Frontend
+El elemento div con el id **"root"** es utilizado por React para renderizar los componentes de la aplicación en el DOM. Este es el punto de entrada principal de **React** para la aplicación frontend.
+```html:-public/index.html
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>CUT YOUR URL! - By Esleiter</title>
+  </head>
+  <body>
+    <noscript>You need to enable JavaScript to run this app.</noscript>
+    <div id="root"></div>
+    <div id="powered">Powered By <a href="https://esleiter.com" target="_blank">esleiter.com</a></div>
+  </body>
+</html>
+```
+```js:-src/index.js
+import React from 'react'; // Importa la librería de React
+import ReactDOM from 'react-dom'; // Importa la librería de React para renderizar elementos en el DOM
+import './css/index.css'; // Importa el archivo CSS para el índice
+import './css/app.css'; // Importa el archivo CSS para la aplicación
+import Root from './js/app'; // Importa el componente "Root" desde la carpeta "js/app"
+
+// Crea un componente de React llamado "App"
+const App = () => {
+  return (
+    <Root /> // Renderiza el componente "Root"
+  );
+};
+
+// Renderiza el componente "App" en el elemento del DOM con el ID "root"
+ReactDOM.render(<App />, document.getElementById('root'));
+```
+
+```css:-src/css/app.css
+.app {
+  text-align: center;
+}
+
+.app-section {
+  background-color: #1a1c22;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  font-size: calc(10px + 2vmin);
+  color: #1c9cea;
+}
+
+form {
+  width: 90vw;
+}
+
+.input-url {
+  background: #c6c8cc;
+  border: none;
+  width: 50%;
+  height: 26px;
+  border-radius: 10px 0 0 10px;
+  border: solid 1px #1c9cea;
+}
+
+.input-url:focus {
+  outline: none;
+  height: 24px;
+  border: solid 2px #1c9cea;
+}
+
+.button-submit {
+  background: #1c9cea;
+  color: #1a1c22;
+  border: none;
+  height: 30px;
+  width: 20%;
+  border-radius: 0 10px 10px 0;
+  cursor: pointer;
+  font-weight: bold;
+}
+
+.button-submit:hover {
+  background-color: #0a3550;
+}
+```
+```css:-src/css/index.css
+@import url('https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@700&display=swap');
+
+body {
+  font-family: 'Noto Sans JP', sans-serif;
+  margin: 0;
+}
+
+svg {
+  height: 48px;
+  width: 48px;
+  margin: 10px;
+  cursor: pointer;
+}
+
+svg:hover {
+  margin: 0 10px 20px 10px;
+}
+
+a {
+  text-decoration: none;
+  color: #1c9cea;
+}
+
+#powered {
+  color: #fff;
+  position: absolute;
+  left: 10px;
+  top: 10px;
+}
+```
+```js:-src/js/app.js
+import Cut from './cut';
+import Redirect from './redirect';
+import { BrowserRouter as Router, Switch, Route} from 'react-router-dom';
+
+// Componente Root que define las rutas de la aplicación
+const Root = () => {
+  return (
+    <div className="app">
+      <Router>
+        <Switch>
+          {/* Ruta para el componente Cut */}
+          <Route exact path="/">
+            <Cut />
+          </Route>
+          {/* Ruta para el componente Redirect */}
+          <Route path="/:id">
+            <Redirect />
+          </Route>
+        </Switch>
+      </Router>
+    </div>
+  );
+};
+export default Root;
+```
+```js:-src/js/cut.js
+import axios from 'axios'; // Importa la librería Axios
+import Social from './social'; // Importa el componente Social
+import { useState } from 'react'; // Importa el hook useState de React
+
+const Cut = () => {
+  var api = 'http://localhost:4000/cut'; // URL de la API
+
+  const [state, setState] = useState({
+    'url': '',
+    'urlCut': ''
+  }); // Define un estado con dos propiedades: url y urlCut
+
+  const handleChange = (e) => {
+    setState({ url: e.target.value }); // Actualiza el estado con la url ingresada por el usuario
+  };
+
+  const handleSubmit = (e) => {
+    e.preventDefault(); // Evita que la página se recargue al enviar el formulario
+
+    const validUrl = new RegExp(
+      /(http|https):\/\/(\w+:{0,1}\w*@)?[-a-zA-Z0-9@:%._~#=]{2,256}\.[a-z]{2,6}\b([-a-zA-Z0-9@:%_.~#?&//=]*)/g
+    ); // Expresión regular para validar la URL
+
+    const addhttp = (urlTest) => {
+      if (!validUrl.test(urlTest)) {
+        urlTest = 'http://'+urlTest;
+      };
+      return urlTest;
+    }; // Función para añadir 'http://' a la URL si no tiene un protocolo válido
+
+    const urlHttp = addhttp(state.url); // Aplica la función addhttp a la URL ingresada
+
+    axios.post(api, { url: urlHttp }) // Realiza una petición POST a la API
+    .then(res => {
+      setState({ 
+        url: urlHttp,
+        urlCut: res.data.code
+      }); // Actualiza el estado con la URL original y la URL corta generada por la API
+    });
+  };
+
+  return (
+    <section className="app-section">
+      <h1>CUT YOUR URL HERE!</h1>
+      <form onSubmit={handleSubmit}>
+        <input type="text" name="url" className="input-url" onChange={handleChange} placeholder="https://esleiter.com" />
+        <button type="submit" className="button-submit">CUT!</button>
+      </form>
+      {/* Muestra la URL corta generada */}
+      <a id="urlCut" href={state.urlCut} target="_blank">{window.location.href}{state.urlCut}</a>
+      {/* Renderiza el componente Social y le pasa la URL corta como prop */}
+      <Social url={state.urlCut} />
+    </section>
+  );
+};
+export default Cut;
+```
+```js:-src/js/redirect.js
+import axios from 'axios';
+import { useState } from 'react';
+import { useParams } from 'react-router-dom';
+
+// Componente para mostrar mientras se carga la redirección
+const Loading = () => {
+  return (
+    <h1>Loading...</h1>
+  );
+};
+
+// Componente para mostrar cuando no se encuentra la URL corta
+const NotFound = () => {
+  return (
+    <h1>Not found.<code><br/> error 404.</code></h1>
+  );
+};
+
+// Componente para manejar la redirección
+const Redirect= () => {
+  var { id } = useParams();
+  var api = `http://localhost:4000/${id}`;
+
+  const [state, setState] = useState({
+    'found': true
+  });
+
+  const on = () => {
+    axios.get(api)
+    .then(res => {
+      window.location = res.data.url;
+    })
+    .catch(e => {
+      // Si la respuesta es un error 404, cambia el estado para mostrar el componente NotFound
+      if (e.response.status === 404) {
+        setState({ 
+          found: false
+        });
+      };
+    });
+  };
+
+  // Si la URL corta no se encuentra, muestra el componente NotFound
+  if (state.found === false) {
+    return (
+      <NotFound />
+    );
+  } else {
+    // Muestra el componente Loading mientras se hace la redirección
+    return (
+      <section className="app-section">
+        {window.onload = on()}
+        <Loading />
+      </section>
+    );
+  };
+};
+
+export default Redirect;
+```
+```js:-src/js/social.js
+const Social = (props) => {
+    const getlink = () => {
+        var aux = document.createElement("input");
+        aux.setAttribute("value",document.getElementById('urlCut'));
+        document.body.appendChild(aux);
+        aux.select();
+        document.execCommand("copy");
+        document.body.removeChild(aux);
+        alert("URL copied to clipboard!");
+    };
+    
+    return (
+        <div className="social">
+            <p>share...</p>
+            <a target="_blank" rel="noreferrer" href={`whatsapp://send?text=${window.location.href}${props.url}`}>
+                <svg viewBox="0 0 24 24"><path fill="#51AB55" d="M.057 24l1.687-6.163c-1.041-1.804-1.588-3.849-1.587-5.946.003-6.556 5.338-11.891 11.893-11.891 3.181.001 6.167 1.24 8.413 3.488 2.245 2.248 3.481 5.236 3.48 8.414-.003 6.557-5.338 11.892-11.893 11.892-1.99-.001-3.951-.5-5.688-1.448l-6.305 1.654zm6.597-3.807c1.676.995 3.276 1.591 5.392 1.592 5.448 0 9.886-4.434 9.889-9.885.002-5.462-4.415-9.89-9.881-9.892-5.452 0-9.887 4.434-9.889 9.884-.001 2.225.651 3.891 1.746 5.634l-.999 3.648 3.742-.981zm11.387-5.464c-.074-.124-.272-.198-.57-.347-.297-.149-1.758-.868-2.031-.967-.272-.099-.47-.149-.669.149-.198.297-.768.967-.941 1.165-.173.198-.347.223-.644.074-.297-.149-1.255-.462-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.297-.347.446-.521.151-.172.2-.296.3-.495.099-.198.05-.372-.025-.521-.075-.148-.669-1.611-.916-2.206-.242-.579-.487-.501-.669-.51l-.57-.01c-.198 0-.52.074-.792.372s-1.04 1.016-1.04 2.479 1.065 2.876 1.213 3.074c.149.198 2.095 3.2 5.076 4.487.709.306 1.263.489 1.694.626.712.226 1.36.194 1.872.118.571-.085 1.758-.719 2.006-1.413.248-.695.248-1.29.173-1.414z"/></svg>
+            </a>
+            <a target="_blank" rel="noreferrer" href={`http://www.facebook.com/sharer.php?u=${window.location.href}${props.url}`}>
+                <svg viewBox="0 0 24 24"><path fill="#4064AC" d="M22,12c0-5.52-4.48-10-10-10S2,6.48,2,12c0,4.84,3.44,8.87,8,9.8V15H8v-3h2V9.5C10,7.57,11.57,6,13.5,6H16v3h-2 c-0.55,0-1,0.45-1,1v2h3v3h-3v6.95C18.05,21.45,22,17.19,22,12z"/></svg>
+            </a>
+            <a target="_blank" rel="noreferrer" href={`fb-messenger://share/?link=${window.location.href}${props.url}`}>
+                <svg viewBox="0 0 24 24">
+                    <defs><linearGradient id="grad1" x1="40%" y1="65%" x2="75%" y2="10%"><stop offset="0%" stop-color="#476bff"/><stop offset="54%" stop-color="#af37e6"/><stop offset="100%" stop-color="#fc656e"/></linearGradient></defs>
+                    <path fill="url(#grad1)" d="M12 0c-6.627 0-12 4.975-12 11.111 0 3.497 1.745 6.616 4.472 8.652v4.237l4.086-2.242c1.09.301 2.246.464 3.442.464 6.627 0 12-4.974 12-11.111 0-6.136-5.373-11.111-12-11.111zm1.193 14.963l-3.056-3.259-5.963 3.259 6.559-6.963 3.13 3.259 5.889-3.259-6.559 6.963z"/>
+                </svg>
+            </a>
+            <a target="_blank" rel="noreferrer" href={`http://twitter.com/home?status=Visit%20${window.location.href}${props.url}`}>
+                <svg viewBox="0 0 24 24"><path fill="#55ADEE" d="M24 4.557c-.883.392-1.832.656-2.828.775 1.017-.609 1.798-1.574 2.165-2.724-.951.564-2.005.974-3.127 1.195-.897-.957-2.178-1.555-3.594-1.555-3.179 0-5.515 2.966-4.797 6.045-4.091-.205-7.719-2.165-10.148-5.144-1.29 2.213-.669 5.108 1.523 6.574-.806-.026-1.566-.247-2.229-.616-.054 2.281 1.581 4.415 3.949 4.89-.693.188-1.452.232-2.224.084.626 1.956 2.444 3.379 4.6 3.419-2.07 1.623-4.678 2.348-7.29 2.04 2.179 1.397 4.768 2.212 7.548 2.212 9.142 0 14.307-7.721 13.995-14.646.962-.695 1.797-1.562 2.457-2.549z"/></svg>
+            </a>
+            {/*eslint-disable-next-line*/}
+            <a onClick={getlink}>
+                <svg viewBox="0 0 24 24"><path d="M0 0h24v24H0V0z" fill="none"/><path fill="#1c9cea" d="M16 1H4c-1.1 0-2 .9-2 2v14h2V3h12V1zm3 4H8c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h11c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2zm0 16H8V7h11v14z"/></svg>
+            </a>    
+        </div>
+    );
+};
+export default Social;
+```
+
+**¡Gracias por leer!** Espero que te haya resultado útil e interesante. Siéntete libre de utilizar este código para tus proyectos personales, y de modificarlo para adaptarlo a tus necesidades.
+
+Si tienes preguntas, comentarios o sugerencias, no dudes en hacérmelo saber. Me encantaría escuchar tus ideas.
+
+No olvides estar al tanto de mis próximos posts. **¡Hasta pronto!**

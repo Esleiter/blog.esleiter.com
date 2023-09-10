@@ -1,0 +1,124 @@
+---
+title: "No utilices SWITCH"
+summary: "Los objetos son más escalables que if/else y switch."
+date: 2023-03-30
+dateText: "30 de Marzo del 2023"
+readingTime: "Tiempo de lectura: 3 min 9 seg."
+---
+
+## No utilices SWITCH
+
+### Diferencias entre if else if, switch y objetos en JavaScript
+
+Cuando se trata de programar en **JavaScript**, hay varias maneras de controlar el flujo de ejecución del código. Estaremos detallando tres formas de hacerlo, a través de las declaraciones **if else if, switch** y mediante el uso de **objetos.** En este artículo, exploraremos las diferencias entre estas tres técnicas utilizando un ejemplos, explicando por qué el uso de objetos es preferible en algunos casos.
+
+### Declaraciones if else if
+
+Permite ejecutar diferentes bloques de código según una o varias condiciones. En su forma más básica, esta declaración toma la forma:
+
+```js:-main.js
+if (condición1) {
+  // Código a ejecutar si la condición1 se cumple
+} else if (condición2) {
+  // Código a ejecutar si la condición2 se cumple
+} else {
+  // Código a ejecutar si ninguna de las condiciones anteriores se cumple
+}
+```
+
+Utilicemos esta declaración con un ejemplo de superhéroes:
+
+```js:-main.js
+const superhero = "Batman";
+
+if (superhero === "Superman") {
+  console.log("¡Es un pájaro! ¡Es un avión! ¡Es Superman!");
+} else if (superhero === "Spiderman") {
+  console.log("Un gran poder conlleva una gran responsabilidad.");
+} else {
+  console.log("¿Dónde está Harvey Dent?");
+}
+```
+
+### Declaración switch
+
+También permite ejecutar diferentes bloques de código según una o varias condiciones. En lugar de evaluar varias condiciones como lo hace **if else if**, la declaración **switch** evalúa una sola expresión y compara el resultado con varios valores posibles.
+
+```js:-main.js
+switch (expresión) {
+  case valor1:
+    // Código a ejecutar si la expresión coincide con valor1
+    break;
+  case valor2:
+    // Código a ejecutar si la expresión coincide con valor2
+    break;
+  default:
+    // Código a ejecutar si la expresión no coincide con ningún valor
+}
+```
+
+Si queremos utilizar la declaración switch, podríamos hacer lo siguiente:
+
+
+```js:-main.js
+const superhero = "Spiderman";
+
+switch (superhero) {
+  case "Superman":
+    console.log("¡Es un pájaro! ¡Es un avión! ¡Es Superman!");
+    break;
+  case "Spiderman":
+    console.log("Un gran poder conlleva una gran responsabilidad.");
+    break;
+  default:
+    console.log("¿Dónde está Harvey Dent?");
+}
+```
+
+### Utilizando objetos
+
+En lugar de utilizar declaraciones **if else if o switch**, también podemos utilizar **objetos** para controlar el flujo de ejecución del código. Un objeto es una **colección de propiedades y valores** que pueden ser accedidos y modificados en el código.
+
+Para el ejemplo de superhéroes, podríamos utilizar un objeto para almacenar información sobre cada superhéroe, como su nombre, su poder y su frase famosa. Podríamos hacerlo de la siguiente manera:
+
+```js:-main.js
+const superheroes = {
+  Superman: {
+    power: "Super strength, flight, heat vision",
+    phrase: "¡Es un pájaro! ¡Es un avión! ¡Es Superman!"
+  },
+  Spiderman: {
+    power: "Spider sense, wall-crawling, web-slinging",
+    phrase: "Un gran poder conlleva una gran responsabilidad."
+  },
+  Batman: {
+    power: "Genius-level intellect, martial arts, gadgets",
+    phrase: "¿Dónde está Harvey Dent?"
+  }
+};
+```
+
+Luego, podemos utilizar la siguiente función para imprimir la información del superhéroe que queramos:
+
+```js:-main.js
+function printSuperheroInfo(superhero) {
+  const { power, phrase } = superheroes[superhero];
+
+  console.log(`${superhero} tiene el poder de ${power}. Su frase famosa es "${phrase}".`);
+}
+```
+
+Al utilizar esta función con el nombre de un superhéroe como argumento, podemos imprimir su información en la consola:
+
+```js:-main.js
+printSuperheroInfo("Superman"); // "Superman tiene el poder de Super strength, flight, heat vision. Su frase famosa es "¡Es un pájaro! ¡Es un avión! ¡Es Superman!."
+```
+
+### ¿Por qué es mejor utilizar objetos?
+
+Hay varias formas de controlar el flujo de ejecución del código en JavaScript, y la elección de la técnica adecuada dependerá de las necesidades específicas de nuestro proyecto. Aunque las declaraciones **if else if** y **switch** son útiles en muchas situaciones, utilizar **objetos** puede ser una solución más elegante y escalable en ciertos casos. Al utilizar objetos, podemos almacenar información estructurada y acceder a ella de manera más fácil y clara. Además, si necesitamos agregar información adicional a nuestros superhéroes en el futuro, solo necesitamos agregar nuevas propiedades al objeto, en lugar de modificar nuestro código existente. En general, el uso de objetos puede hacer que nuestro código sea más modular, fácil de leer y mantener en el largo plazo.
+
+---
+¡Muchas gracias por leer este artículo! Espero que haya sido útil para ti. Si tienes alguna pregunta o comentario, no dudes en dejármelo saber. ¡Hasta la próxima!
+
+<img src="/images/batman-superman-and-spiderman.png" width="100%" alt="Pixel art of batman, superman and spiderman" />

@@ -1,0 +1,159 @@
+@import url("https://fonts.googleapis.com/css?family=Montserrat:200,500");
+:root {
+    --primary-color: #1C9CEA;
+    --secondary-color: #0A3550;
+    --dark-color: #1A1C22;
+    --white: #fff;
+}
+
+body {
+    font-family: Montserrat, Arial, Helvetica, sans-serif;
+    margin: 0;
+    padding: 0;
+}
+
+#circle {
+    width: 13px;
+    height: 13px;
+    background-color: var(--primary-color);
+    border-radius: 50%;
+    display: inline-block;
+    margin: 5px 5px auto;
+}
+
+h1 {
+    font-size: 1.2rem;
+    color: var(--white);
+    display: inline-block;
+}
+
+a {
+    text-decoration: none;
+}
+
+header {
+    background-color: var(--dark-color);
+    position: fixed;
+    width: 100%;
+    text-align: center;
+    top: 0;
+    left: 0;
+    z-index: 999;
+}
+
+main {
+    margin: 80px 0px;
+}
+
+article{
+    width: 60%;
+    text-align: left;
+    margin: 0 auto;
+    padding-top: 20px;
+}
+.resume {
+    width: 80%;
+    text-align: center;
+    padding: 20px 50px;
+    font-weight: 200;
+}
+.social-contact {
+    color: var(--main-color);
+    font-size: 3rem;
+}
+.social-icon {
+    color: var(--main-color);
+    font-size: 3rem;
+}
+.date-lecture-time {
+    color: var(--secondary-color);
+}
+strong, strong > a {
+    color: var(--primary-color);
+}
+h2 {
+    font-size: 2rem;
+}
+.paragraph, h3 {
+    font-size: 1.3rem;
+}
+.paragraph > h3 {
+    margin-top: 50px;
+}
+.author {
+    display: flex;
+    justify-content: center;
+}
+.my-face {
+    border-radius: 50%;
+    width: 80px;
+    padding: 20px 20px;
+}
+.img-author {
+    float: left;
+}
+.info-author {
+    width: 60%;
+    float: left;
+}
+footer {
+    background-color: var(--secondary-color);
+    color: var(--white);
+    display: flex;
+    flex-direction: column;
+    text-align: center;
+    align-items: center;
+    justify-content: center;
+    height: 200px;
+}
+footer a {
+    color: var(--white);
+}
+.social-contact {
+    width: 100%;
+}
+.social-icon {
+    color: var(--white);
+    font-size: 3rem;
+}
+i:hover {
+    color: var(--dark-color);
+}
+.copyright {
+    width: 100%;
+}
+.anchor {
+    position: absolute;
+    visibility: hidden;
+    margin-left: -1em;
+    padding-right: 0.5em;
+    width: 80%;
+    max-width: 700px;
+    cursor: pointer;
+  }
+.anchor:hover, *:hover > .anchor {
+    visibility: visible;
+    text-decoration: none;
+  }
+  
+.anchor:after {
+    color: #999999;
+    content: "/";
+  }
+
+@media (max-width: 600px) {
+    article {
+        padding: 20px;
+        width: 90%;
+    }
+    .author {
+        flex-flow: row wrap;
+        text-align: center;
+    }
+    .img-author {
+        width: 100%;
+    }
+    .info-author {
+        width: 100%;
+    }
+}
