@@ -4,7 +4,6 @@ import { getMDXComponent } from 'next-contentlayer/hooks'
 import { compareDesc, format, parseISO } from 'date-fns'
 import { Footer } from 'components/Footer'
 
-import myFace from 'public/images/myFace.jpeg'
 import "styles/prism-vsc-dark-plus.css";
 
 export const generateStaticParams = async () => allPosts.map((post) => ({ slug: post._raw.flattenedPath }))
@@ -110,7 +109,7 @@ const PostLayout = ({ params }: { params: { slug: string } }) => {
 
         <article className='author'>
           <div className='img-author'>
-            <img className='my-face' src={myFace.src} alt='Face of Esleiter' />
+            <img className='my-face' src='https://avatars.githubusercontent.com/u/57963142?v=4' alt='Face of Esleiter' />
           </div>
           <div className='info-author'>
             <h3>Esleiter 🚀</h3>
